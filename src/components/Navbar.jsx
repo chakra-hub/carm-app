@@ -20,7 +20,7 @@ import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 const pages = ["Products", "Pricing", "Blog"];
 const settings = ["Logout"];
 
-function Navbar() {
+function Navbar({onAuthChange, isAuthenticated}) {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -46,6 +46,7 @@ function Navbar() {
         setIsLoggedIn(true);
       } else {
         setIsLoggedIn(false);
+        onAuthChange(false);
       }
     });
   }, []);
@@ -95,7 +96,7 @@ function Navbar() {
             Carm
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}></Box>
-          {auth?.currentUser?.emailVerified && 
+          {isAuthenticated && 
           <Box sx={{ flexGrow: 0 }}>
           <Tooltip title="Open settings">
             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>

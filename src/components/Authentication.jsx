@@ -9,7 +9,7 @@ import Input from "@mui/joy/Input";
 import Button from "@mui/joy/Button";
 import Link from "@mui/joy/Link";
 
-const Authentication = () => {
+const Authentication = ({onAuthChange}) => {
   const [isSignup, setIsSignup] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -17,25 +17,30 @@ const Authentication = () => {
     confirmPassword: "",
   });
   const [showEmailSent, setShowEmailSent] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false)
 
   const navigate = useNavigate();
 
   const toggleForm = () => {
     setShowEmailSent(false)
     setIsSignup((prev) => !prev);
-    setFormData({
-      email: "",
-      password: "",
-      confirmPassword: "",
-    });
+
   };
 
   const handleAuth = async (action) => {
     if (action === "Signin") {
       try {
-        const user = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        let currentUserEmailId;
+        if(auth?.currentUser?.email){
+        currentUserEmailId = auth.currentUser.email;
+        }
+
+        const user = await signInWithEmailAndPassword(auth, formData.email ?? currentUserEmailId, formData.password);
         if(!user.user.emailVerified){
             setShowEmailSent(true)
+        }else{
+            onAuthChange(true);
+            setIsEmailVerified(true)
         }
       } catch (error) {
         alert(error.code);
@@ -63,10 +68,11 @@ const Authentication = () => {
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
     if (user?.emailVerified==true) {
+        onAuthChange(true);
         navigate("/todos");
       }
     });
-  }, []);
+  }, [isEmailVerified]);
 
   return (
     <Box

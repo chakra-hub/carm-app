@@ -1,10 +1,10 @@
 // src/components/LandingPage.js
-import React from "react";
+import React, { useState } from "react";
 import Authentication from "./Authentication";
 import Box from "@mui/joy/Box";
 import Typography from "@mui/joy/Typography";
 
-const LandingPage = () => {
+const LandingPage = ({onAuthChange}) => {
   return (
     <Box
       sx={{
@@ -55,7 +55,7 @@ const LandingPage = () => {
         }}
       >
         {/* AuthForm is used here for user authentication */}
-        <Authentication />
+        <Authentication onAuthChange={onAuthChange}/>
       </Box>
 
       {/* Footer Section */}
