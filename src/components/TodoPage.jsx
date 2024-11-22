@@ -35,8 +35,7 @@ const TodoPage = () => {
   const [sortValue, setSortValue] = useState("Priority - High to Low");
   const [inputFieldError, setInputFieldError] = useState(false);
   const { user, isEmailVerified } = useAuth();
-  const navigate = useNavigate();
-
+  
   const addTodos = () => {
     const uidd = uid(); //DFASDFSDFA
     set(ref(db, `/${auth.currentUser.uid}/${uidd}`), {

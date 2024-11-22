@@ -22,8 +22,7 @@ const Authentication = () => {
     confirmPassword: "",
   });
   const [showEmailSent, setShowEmailSent] = useState(false);
-  const {user, isEmailVerified, setUser} = useAuth();
-console.log(isEmailVerified)
+  const {user, isEmailVerified, setUser, setIsEmailVerified} = useAuth();
   const navigate = useNavigate();
 
   const toggleForm = () => {
@@ -41,6 +40,7 @@ console.log(isEmailVerified)
             );
             if (userCredential.user.emailVerified) {
               setUser(userCredential.user);
+              setIsEmailVerified(userCredential.user.emailVerified);
               navigate("/todos");
             } else {
                 setShowEmailSent(true);
@@ -77,7 +77,7 @@ console.log(isEmailVerified)
         navigate('/todos')
     }
   },[isEmailVerified])
-
+console.log(user, isEmailVerified)
   return (
     <Box
       sx={{
@@ -132,6 +132,7 @@ console.log(isEmailVerified)
           </Box>
         )}
         <Button
+        type="submit"
           onClick={(e) => {
             e.preventDefault();
             handleAuth(isSignup ? "Signup" : "Signin");
