@@ -99,7 +99,7 @@ function Navbar({onAuthChange, isAuthenticated}) {
           {isAuthenticated && 
           <Box sx={{ flexGrow: 0 }}>
           <Tooltip title="Open settings">
-            <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+            <IconButton onClick={()=>{handleOpenUserMenu()}} sx={{ p: 0 }}>
               <Avatar alt="Remy Sharp" />
             </IconButton>
           </Tooltip>
@@ -117,7 +117,7 @@ function Navbar({onAuthChange, isAuthenticated}) {
               horizontal: "right",
             }}
             open={Boolean(anchorElUser)}
-            onClose={handleCloseUserMenu}
+            onClose={()=>{handleCloseUserMenu()}}
           >
             {settings.map((setting) => (
               <MenuItem

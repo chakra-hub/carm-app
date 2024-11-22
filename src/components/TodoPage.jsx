@@ -22,7 +22,7 @@ import FormHelperText from "@mui/joy/FormHelperText";
 import Stack from "@mui/joy/Stack";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 
-const TodoPage = () => {
+const TodoPage = ({onAuthChange}) => {
   const [todos, setTodos] = useState([]); // Placeholder for todos
   const [newTodo, setNewTodo] = useState({
     title: "",
@@ -68,6 +68,7 @@ const TodoPage = () => {
       if (!user) {
         navigate("/");
       } else {
+        onAuthChange(true);
         onValue(ref(db, `/${auth.currentUser.uid}`), (snapshot) => {
           setTodos([]);
           const data = snapshot.val();
