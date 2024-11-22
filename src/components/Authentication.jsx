@@ -57,7 +57,6 @@ console.log(isEmailVerified)
             formData.email,
             formData.password
           );
-          setFormData({ ...formData, email: user?.email });
           setIsSignup(false);
           sendEmailVerification(auth.currentUser);
           setShowEmailSent(true);
