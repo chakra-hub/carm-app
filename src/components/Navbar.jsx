@@ -16,40 +16,22 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
+import { useAuth } from "../authContex";
 
-const pages = ["Products", "Pricing", "Blog"];
 const settings = ["Logout"];
 
-function Navbar({onAuthChange, isAuthenticated}) {
+function Navbar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const {isEmailVerified} = useAuth();
 
-  const handleOpenNavMenu = (event) => {
-    setAnchorElNav(event.currentTarget);
-  };
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
   };
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
-
-  useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        setIsLoggedIn(true);
-      } else {
-        setIsLoggedIn(false);
-        onAuthChange(false);
-      }
-    });
-  }, []);
 
   return (
     <AppBar position="static">
@@ -96,10 +78,10 @@ function Navbar({onAuthChange, isAuthenticated}) {
             Carm
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}></Box>
-          {isAuthenticated && 
+          {isEmailVerified && 
           <Box sx={{ flexGrow: 0 }}>
           <Tooltip title="Open settings">
-            <IconButton onClick={()=>{handleOpenUserMenu()}} sx={{ p: 0 }}>
+            <IconButton onClick={(event)=>{handleOpenUserMenu(event)}} sx={{ p: 0 }}>
               <Avatar alt="Remy Sharp" />
             </IconButton>
           </Tooltip>
@@ -117,7 +99,7 @@ function Navbar({onAuthChange, isAuthenticated}) {
               horizontal: "right",
             }}
             open={Boolean(anchorElUser)}
-            onClose={()=>{handleCloseUserMenu()}}
+            onClose={(event)=>{handleCloseUserMenu(event)}}
           >
             {settings.map((setting) => (
               <MenuItem

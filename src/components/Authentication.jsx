@@ -1,5 +1,9 @@
 // src/components/AuthForm.js
-import { createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import React, { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
@@ -8,8 +12,9 @@ import Typography from "@mui/joy/Typography";
 import Input from "@mui/joy/Input";
 import Button from "@mui/joy/Button";
 import Link from "@mui/joy/Link";
+import { useAuth } from "../authContex";
 
-const Authentication = ({onAuthChange}) => {
+const Authentication = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -17,39 +22,42 @@ const Authentication = ({onAuthChange}) => {
     confirmPassword: "",
   });
   const [showEmailSent, setShowEmailSent] = useState(false);
-  const [isEmailVerified, setIsEmailVerified] = useState(false)
-
+  const {user, isEmailVerified, setUser} = useAuth();
+console.log(isEmailVerified)
   const navigate = useNavigate();
 
   const toggleForm = () => {
-    setShowEmailSent(false)
+    setShowEmailSent(false);
     setIsSignup((prev) => !prev);
-
   };
 
   const handleAuth = async (action) => {
     if (action === "Signin") {
-      try {
-        let currentUserEmailId;
-        if(auth?.currentUser?.email){
-        currentUserEmailId = auth.currentUser.email;
-        }
-
-        const user = await signInWithEmailAndPassword(auth, formData.email ?? currentUserEmailId, formData.password);
-        if(!user.user.emailVerified){
-            setShowEmailSent(true)
-        }else{
-            onAuthChange(true);
-            setIsEmailVerified(true)
-        }
-      } catch (error) {
-        alert(error.code);
-      }
+        try {
+            const userCredential = await signInWithEmailAndPassword(
+              auth,
+              formData.email,
+              formData.password
+            );
+            if (userCredential.user.emailVerified) {
+              setUser(userCredential.user);
+              navigate("/todos");
+            } else {
+                setShowEmailSent(true);
+            }
+          } catch (error) {
+            console.error(error.message);
+            alert(error.message);
+          }
     } else {
       if (formData.password === formData.confirmPassword) {
         try {
-          const user = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-          setFormData({...formData,email:user?.email})
+          const user = await createUserWithEmailAndPassword(
+            auth,
+            formData.email,
+            formData.password
+          );
+          setFormData({ ...formData, email: user?.email });
           setIsSignup(false);
           sendEmailVerification(auth.currentUser);
           setShowEmailSent(true);
@@ -65,14 +73,11 @@ const Authentication = ({onAuthChange}) => {
     }
   };
 
-  useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-    if (user?.emailVerified==true) {
-        onAuthChange(true);
-        navigate("/todos");
-      }
-    });
-  }, [isEmailVerified]);
+  useEffect(()=>{
+    if(user && isEmailVerified){
+        navigate('/todos')
+    }
+  },[isEmailVerified])
 
   return (
     <Box
@@ -89,13 +94,15 @@ const Authentication = ({onAuthChange}) => {
         {isSignup ? "Signup" : "Signin"}
       </Typography>
       <form>
-        <Box sx={{ mb: 2, justifyContent:'start' }}>
+        <Box sx={{ mb: 2, justifyContent: "start" }}>
           <Input
             value={formData.email}
             type="email"
             id="email"
             placeholder="Enter your email"
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
             sx={{ width: "100%" }}
           />
         </Box>
@@ -105,7 +112,9 @@ const Authentication = ({onAuthChange}) => {
             type="password"
             id="password"
             placeholder="Enter your password"
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
             sx={{ width: "100%" }}
           />
         </Box>
@@ -116,13 +125,14 @@ const Authentication = ({onAuthChange}) => {
               type="password"
               id="confirmPassword"
               placeholder="Confirm your password"
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, confirmPassword: e.target.value })
+              }
               sx={{ width: "100%" }}
             />
           </Box>
         )}
         <Button
-          type="submit"
           onClick={(e) => {
             e.preventDefault();
             handleAuth(isSignup ? "Signup" : "Signin");
@@ -140,7 +150,16 @@ const Authentication = ({onAuthChange}) => {
         </Button>
       </form>
       <Typography sx={{ mt: 2 }}>
-        {isSignup ? "Already have an account?" : showEmailSent ? <Typography color="success"> Please verify email to login {" "}</Typography>: "Don't have an account?"}{" "}
+        {isSignup ? (
+          "Already have an account?"
+        ) : showEmailSent ? (
+          <Typography color="success">
+            {" "}
+            Please verify email to login{" "}
+          </Typography>
+        ) : (
+          "Don't have an account?"
+        )}{" "}
         <Link
           onClick={toggleForm}
           sx={{

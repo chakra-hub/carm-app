@@ -4,7 +4,7 @@ import Authentication from "./Authentication";
 import Box from "@mui/joy/Box";
 import Typography from "@mui/joy/Typography";
 
-const LandingPage = ({onAuthChange}) => {
+const LandingPage = () => {
   return (
     <Box
       sx={{
@@ -55,7 +55,7 @@ const LandingPage = ({onAuthChange}) => {
         }}
       >
         {/* AuthForm is used here for user authentication */}
-        <Authentication onAuthChange={onAuthChange}/>
+        <Authentication/>
       </Box>
 
       {/* Footer Section */}

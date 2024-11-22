@@ -21,8 +21,9 @@ import FormLabel from "@mui/joy/FormLabel";
 import FormHelperText from "@mui/joy/FormHelperText";
 import Stack from "@mui/joy/Stack";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import { useAuth } from "../authContex";
 
-const TodoPage = ({onAuthChange}) => {
+const TodoPage = () => {
   const [todos, setTodos] = useState([]); // Placeholder for todos
   const [newTodo, setNewTodo] = useState({
     title: "",
@@ -33,6 +34,7 @@ const TodoPage = ({onAuthChange}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [sortValue, setSortValue] = useState("Priority - High to Low");
   const [inputFieldError, setInputFieldError] = useState(false);
+  const { user, isEmailVerified } = useAuth();
   const navigate = useNavigate();
 
   const addTodos = () => {
@@ -64,24 +66,19 @@ const TodoPage = ({onAuthChange}) => {
   };
 
   useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-      if (!user) {
-        navigate("/");
-      } else {
-        onAuthChange(true);
-        onValue(ref(db, `/${auth.currentUser.uid}`), (snapshot) => {
-          setTodos([]);
-          const data = snapshot.val();
-          if (data !== null) {
-            Object.values(data).map((todo) => {
-              setTodos((prevArray) => [...prevArray, todo]);
-            });
-          }
-          setIsLoading(false);
-        });
-      }
-    });
-  }, []);
+    if (user && isEmailVerified) {
+      onValue(ref(db, `/${auth.currentUser.uid}`), (snapshot) => {
+        setTodos([]);
+        const data = snapshot.val();
+        if (data !== null) {
+          Object.values(data).map((todo) => {
+            setTodos((prevArray) => [...prevArray, todo]);
+          });
+        }
+        setIsLoading(false);
+      });
+    }
+  }, [isEmailVerified]);
   return (
     <Box
       sx={{
@@ -127,13 +124,13 @@ const TodoPage = ({onAuthChange}) => {
                       placeholder="Enter a new task"
                       onChange={(e) => {
                         const input = e.target.value;
-                        
+
                         if (input.length > 30) {
                           setInputFieldError(true);
                         } else {
                           setInputFieldError(false);
                         }
-                        
+
                         // Update state only if input length is <= 30
                         if (input.length <= 30) {
                           setNewTodo({ ...newTodo, title: input });
@@ -175,13 +172,12 @@ const TodoPage = ({onAuthChange}) => {
                         if (newTodo.title === "") setIsEditing(false);
                       }}
                     />
-                    {inputFieldError && 
-                    <FormHelperText>
-                        
-                    <InfoOutlined />
-                    max 30 characters ! 
-                  </FormHelperText>}
-                    
+                    {inputFieldError && (
+                      <FormHelperText>
+                        <InfoOutlined />
+                        max 30 characters !
+                      </FormHelperText>
+                    )}
                   </FormControl>
                 </div>
                 <div>
@@ -226,29 +222,30 @@ const TodoPage = ({onAuthChange}) => {
                 >
                   <Typography level="title-lg">My Todos</Typography>
                 </h2>
-                {todos?.length>1 && 
-                <div style={{ marginBottom: "10px" }}>  
-                Sort :{" "}
-                <Select
-                  defaultValue="Priority - High to Low"
-                  size="sm"
-                  sx={{ width: 100 }}
-                  value={sortValue}
-                  onChange={(event, newValue) => {
-                    setSortValue(newValue);
-                  }}
-                >
-                  <Option value="Priority - High to Low">
-                    Priority - High to Low
-                  </Option>
-                  <Option value="Priority - Low to High">
-                    Priority - Low to High
-                  </Option>
-                </Select>
-              </div>}
-                
+                {todos?.length > 1 && (
+                  <div style={{ marginBottom: "10px" }}>
+                    Sort :{" "}
+                    <Select
+                      defaultValue="Priority - High to Low"
+                      size="sm"
+                      sx={{ width: 100 }}
+                      value={sortValue}
+                      onChange={(event, newValue) => {
+                        setSortValue(newValue);
+                      }}
+                    >
+                      <Option value="Priority - High to Low">
+                        Priority - High to Low
+                      </Option>
+                      <Option value="Priority - Low to High">
+                        Priority - Low to High
+                      </Option>
+                    </Select>
+                  </div>
+                )}
+
                 <ul
-                className="scroll-container"
+                  className="scroll-container"
                   style={{
                     listStyleType: "none",
                     padding: "0",
