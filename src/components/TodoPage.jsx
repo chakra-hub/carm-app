@@ -22,12 +22,14 @@ import FormHelperText from "@mui/joy/FormHelperText";
 import Stack from "@mui/joy/Stack";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import { useAuth } from "../authContex";
+import Checkbox from "@mui/joy/Checkbox";
 
 const TodoPage = () => {
   const [todos, setTodos] = useState([]); // Placeholder for todos
   const [newTodo, setNewTodo] = useState({
     title: "",
     priority: "Low",
+    done: false,
   });
   const [isEditing, setIsEditing] = useState(false);
   const [tempUidd, setTempUidd] = useState("");
@@ -35,7 +37,7 @@ const TodoPage = () => {
   const [sortValue, setSortValue] = useState("Priority - High to Low");
   const [inputFieldError, setInputFieldError] = useState(false);
   const { user, isEmailVerified } = useAuth();
-  
+
   const addTodos = () => {
     const uidd = uid(); //DFASDFSDFA
     set(ref(db, `/${auth.currentUser.uid}/${uidd}`), {
@@ -45,18 +47,27 @@ const TodoPage = () => {
     setNewTodo({
       title: "",
       priority: "Low",
+      done: false,
     });
   };
 
-  const updateTodo = () => {
-    update(ref(db, `/${auth.currentUser.uid}/${tempUidd}`), {
-      todo: newTodo,
-      uidd: tempUidd,
-    });
+  const updateTodo = (action, todo) => {
+    if (action === "updateStatus") {
+      update(ref(db, `/${auth.currentUser.uid}/${todo?.uidd}`), {
+        todo: {...todo.todo, done: !todo?.todo?.done},
+        uidd: todo?.uidd,
+      });
+    } else {
+      update(ref(db, `/${auth.currentUser.uid}/${tempUidd}`), {
+        todo: newTodo,
+        uidd: tempUidd,
+      });
+    }
     setIsEditing(false);
     setNewTodo({
       title: "",
       priority: "Low",
+      done: false,
     });
   };
 
@@ -78,6 +89,7 @@ const TodoPage = () => {
       });
     }
   }, [isEmailVerified]);
+  console.log(todos)
   return (
     <Box
       sx={{
@@ -124,14 +136,14 @@ const TodoPage = () => {
                       onChange={(e) => {
                         const input = e.target.value;
 
-                        if (input.length > 30) {
+                        if (input.length > 40) {
                           setInputFieldError(true);
                         } else {
                           setInputFieldError(false);
                         }
 
                         // Update state only if input length is <= 30
-                        if (input.length <= 30) {
+                        if (input.length <= 40) {
                           setNewTodo({ ...newTodo, title: input });
                         }
                       }}
@@ -223,7 +235,7 @@ const TodoPage = () => {
                 </h2>
                 {todos?.length > 1 && (
                   <div style={{ marginBottom: "10px" }}>
-                    Sort :{" "}
+                  <Typography level="title-sm">Sort :{" "}</Typography>  
                     <Select
                       defaultValue="Priority - High to Low"
                       size="sm"
@@ -264,6 +276,7 @@ const TodoPage = () => {
                         <Card
                           variant="outlined"
                           style={{ marginBottom: "5px" }}
+                        key={todo?.uid}
                         >
                           <CardContent>
                             <div
@@ -298,39 +311,52 @@ const TodoPage = () => {
                             <div
                               style={{
                                 display: "flex",
-                                justifyContent: "right",
+                                justifyContent: "space-between",
+                                alignItems: "center",
                               }}
                             >
-                              {!isEditing && (
-                                <Button
-                                  variant="outlined"
-                                  size="sm"
-                                  color="warning"
-                                  style={{ marginRight: "5px" }}
-                                  onClick={() => {
-                                    setIsEditing(true);
-                                    setNewTodo({
-                                      ...newTodo,
-                                      title: todo.todo.title,
-                                      priority: todo.todo.priority,
-                                    });
-                                    setTempUidd(todo.uidd);
-                                  }}
-                                >
-                                  Edit
-                                </Button>
-                              )}
-                              {!isEditing && (
-                                <Button
-                                  size="sm"
-                                  color="danger"
-                                  onClick={() => {
-                                    deleteTodo(todo.uidd);
-                                  }}
-                                >
-                                  Delete
-                                </Button>
-                              )}
+                              <Checkbox
+                                label="Done"
+                                size="sm"
+                                defaultChecked={todo?.todo?.done}
+                                color={todo?.todo?.done && "success"}
+                                onChange={() => {
+                                  updateTodo("updateStatus", todo);
+                                }}
+                              />
+                              <div>
+                                {!isEditing && (
+                                  <Button
+                                    variant="outlined"
+                                    size="sm"
+                                    color="warning"
+                                    style={{ marginRight: "5px" }}
+                                    onClick={() => {
+                                      setIsEditing(true);
+                                      setNewTodo({
+                                        ...newTodo,
+                                        title: todo.todo.title,
+                                        priority: todo.todo.priority,
+                                        done: todo?.todo?.done
+                                      });
+                                      setTempUidd(todo.uidd);
+                                    }}
+                                  >
+                                    Edit
+                                  </Button>
+                                )}
+                                {!isEditing && (
+                                  <Button
+                                    size="sm"
+                                    color="danger"
+                                    onClick={() => {
+                                      deleteTodo(todo.uidd);
+                                    }}
+                                  >
+                                    Delete
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
