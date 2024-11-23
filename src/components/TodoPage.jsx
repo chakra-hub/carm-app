@@ -5,6 +5,7 @@ import { uid } from "uid";
 import { onValue, ref, remove, set, update } from "firebase/database";
 import { HashLoader } from "react-spinners";
 import Box from "@mui/joy/Box";
+import { Chip } from "@mui/joy";
 import Typography from "@mui/joy/Typography";
 import Input from "@mui/joy/Input";
 import Select from "@mui/joy/Select";
@@ -25,7 +26,8 @@ import { useAuth } from "../authContex";
 import Checkbox from "@mui/joy/Checkbox";
 
 const TodoPage = () => {
-  const [todos, setTodos] = useState([]); // Placeholder for todos
+  const [todos, setTodos] = useState([]);
+  const [copyTodosArray, setCopyTodosArray] = useState([]);
   const [newTodo, setNewTodo] = useState({
     title: "",
     priority: "Low",
@@ -37,6 +39,7 @@ const TodoPage = () => {
   const [sortValue, setSortValue] = useState("Priority - High to Low");
   const [inputFieldError, setInputFieldError] = useState(false);
   const { user, isEmailVerified } = useAuth();
+  const [filterArray, setFilterArray] = useState([]);
 
   const addTodos = () => {
     const uidd = uid(); //DFASDFSDFA
@@ -54,7 +57,7 @@ const TodoPage = () => {
   const updateTodo = (action, todo) => {
     if (action === "updateStatus") {
       update(ref(db, `/${auth.currentUser.uid}/${todo?.uidd}`), {
-        todo: {...todo.todo, done: !todo?.todo?.done},
+        todo: { ...todo.todo, done: !todo?.todo?.done },
         uidd: todo?.uidd,
       });
     } else {
@@ -69,6 +72,47 @@ const TodoPage = () => {
       priority: "Low",
       done: false,
     });
+  };
+
+  const handleFilterTodos = () => {
+    const filteredTodos = todos.filter((item) => {
+      if (filterArray?.length !== 0) {
+        if (filterArray?.length === 1) {
+          if (filterArray[0] === "Done") {
+            if (item?.todo?.done === true) {
+              return item;
+            }
+          } else if (
+            filterArray[0] === "Blocker" ||
+            filterArray[0] === "Low" ||
+            filterArray[0] === "High"
+          ) {
+            if (item?.todo?.priority === filterArray[0]) {
+              return item;
+            }
+          }
+        } else if (filterArray?.length === 2) {
+          if (filterArray[0] == "Done") {
+            if (
+              item?.todo?.done === true &&
+              item?.todo?.priority === filterArray[1]
+            ) {
+              return item;
+            }
+          } else {
+            if (
+              item?.todo?.priority === filterArray[0] &&
+              item?.todo?.done === true
+            ) {
+              return item;
+            }
+          }
+        }
+      } else {
+        return item;
+      }
+    });
+    setCopyTodosArray(filteredTodos);
   };
 
   const deleteTodo = (uidd) => {
@@ -89,7 +133,15 @@ const TodoPage = () => {
       });
     }
   }, [isEmailVerified]);
-  console.log(todos)
+
+  useEffect(() => {
+    if (filterArray?.length > 0) {
+      handleFilterTodos();
+    }else{
+      setCopyTodosArray(todos);
+    }
+  }, [filterArray,todos]);
+
   return (
     <Box
       sx={{
@@ -233,16 +285,22 @@ const TodoPage = () => {
                 >
                   <Typography level="title-lg">My Todos</Typography>
                 </h2>
-                {todos?.length > 1 && (
-                  <div style={{ marginBottom: "10px" }}>
-                  <Typography level="title-sm">Sort :{" "}</Typography>  
+
+                <div
+                  style={{
+                    marginBottom: "10px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div style={{visibility:copyTodosArray.length == 1 && 'hidden'}}>
                     <Select
                       defaultValue="Priority - High to Low"
                       size="sm"
                       sx={{ width: 100 }}
                       value={sortValue}
                       onChange={(event, newValue) => {
-                        setSortValue(newValue);
+                          setSortValue(newValue);
                       }}
                     >
                       <Option value="Priority - High to Low">
@@ -253,7 +311,36 @@ const TodoPage = () => {
                       </Option>
                     </Select>
                   </div>
-                )}
+
+                  <div>
+                    <Select
+                      size="sm"
+                      multiple
+                      onChange={(event, newValue) => setFilterArray(newValue)}
+                      renderValue={(selected) => (
+                        <Box sx={{ display: "flex", gap: "0.25rem" }}>
+                          {selected.map((selectedOption) => (
+                            <Chip variant="soft" color="primary">
+                              {selectedOption.label}
+                            </Chip>
+                          ))}
+                        </Box>
+                      )}
+                      slotProps={{
+                        listbox: {
+                          sx: {
+                            width: "100%",
+                          },
+                        },
+                      }}
+                    >
+                      <Option value="Done">Done</Option>
+                     {filterArray?.indexOf('Low') === -1 && filterArray?.indexOf('High') === -1 && <Option value="Blocker">Blocker</Option>}
+                     {filterArray?.indexOf('Blocker') === -1 && filterArray?.indexOf('Low') === -1 && <Option value="High">High</Option>}  
+                     {filterArray?.indexOf('Blocker') === -1 && filterArray?.indexOf('High') === -1 && <Option value="Low">Low</Option>}
+                    </Select>
+                  </div>
+                </div>
 
                 <ul
                   className="scroll-container"
@@ -265,102 +352,105 @@ const TodoPage = () => {
                     maxHeight: "calc(100vh - 57vh)",
                   }}
                 >
-                  {todos.length > 0 ? (
-                    todos
-                      .sort((a, b) =>
+                  {copyTodosArray?.length > 0 ? (
+                    copyTodosArray
+                      ?.sort((a, b) =>
                         sortValue === "Priority - High to Low"
-                          ? a.todo.priority.localeCompare(b.todo.priority)
-                          : b.todo.priority.localeCompare(a.todo.priority)
+                          ? a?.todo?.priority?.localeCompare(b.todo?.priority)
+                          : b?.todo?.priority?.localeCompare(a?.todo?.priority)
                       )
-                      .map((todo, index) => (
-                        <Card
-                          variant="outlined"
-                          style={{ marginBottom: "5px" }}
-                        key={todo?.uid}
-                        >
-                          <CardContent>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
-                            >
-                              <Typography level="title-sm">
-                                {todo.todo.title}
-                              </Typography>
-
-                              {todo.todo.priority === "Blocker" && (
-                                <Tooltip title="Blocker">
-                                  <BlockIcon />{" "}
-                                </Tooltip>
-                              )}
-
-                              {todo.todo.priority === "Low" && (
-                                <Tooltip title="Priority Low">
-                                  <LowPriorityIcon />
-                                </Tooltip>
-                              )}
-
-                              {todo.todo.priority === "High" && (
-                                <Tooltip title="Priority High">
-                                  <PriorityHighIcon />
-                                </Tooltip>
-                              )}
-                            </div>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
-                            >
-                              <Checkbox
-                                label="Done"
-                                size="sm"
-                                defaultChecked={todo?.todo?.done}
-                                color={todo?.todo?.done && "success"}
-                                onChange={() => {
-                                  updateTodo("updateStatus", todo);
+                      .map((todo, index) => {
+                        return (
+                          <Card
+                            variant="outlined"
+                            style={{ marginBottom: "5px" }}
+                            key={todo?.uid}
+                          >
+                            <CardContent>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
                                 }}
-                              />
-                              <div>
-                                {!isEditing && (
-                                  <Button
-                                    variant="outlined"
-                                    size="sm"
-                                    color="warning"
-                                    style={{ marginRight: "5px" }}
-                                    onClick={() => {
-                                      setIsEditing(true);
-                                      setNewTodo({
-                                        ...newTodo,
-                                        title: todo.todo.title,
-                                        priority: todo.todo.priority,
-                                        done: todo?.todo?.done
-                                      });
-                                      setTempUidd(todo.uidd);
-                                    }}
-                                  >
-                                    Edit
-                                  </Button>
+                              >
+                                <Typography level="title-sm">
+                                  {todo?.todo?.title}
+                                </Typography>
+
+                                {todo?.todo?.priority === "Blocker" && (
+                                  <Tooltip title="Blocker">
+                                    <BlockIcon />{" "}
+                                  </Tooltip>
                                 )}
-                                {!isEditing && (
-                                  <Button
-                                    size="sm"
-                                    color="danger"
-                                    onClick={() => {
-                                      deleteTodo(todo.uidd);
-                                    }}
-                                  >
-                                    Delete
-                                  </Button>
+
+                                {todo?.todo?.priority === "Low" && (
+                                  <Tooltip title="Priority Low">
+                                    <LowPriorityIcon />
+                                  </Tooltip>
+                                )}
+
+                                {todo?.todo?.priority === "High" && (
+                                  <Tooltip title="Priority High">
+                                    <PriorityHighIcon />
+                                  </Tooltip>
                                 )}
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Checkbox
+                                  label="Done"
+                                  size="sm"
+                                  key={todo?.uidd}
+                                  defaultChecked={todo?.todo?.done}
+                                  color={todo?.todo?.done && "success"}
+                                  onChange={() => {
+                                    updateTodo("updateStatus", todo);
+                                  }}
+                                />
+                                <div>
+                                  {!isEditing && (
+                                    <Button
+                                      variant="outlined"
+                                      size="sm"
+                                      color="warning"
+                                      style={{ marginRight: "5px" }}
+                                      onClick={() => {
+                                        setIsEditing(true);
+                                        setNewTodo({
+                                          ...newTodo,
+                                          title: todo.todo.title,
+                                          priority: todo.todo.priority,
+                                          done: todo?.todo?.done,
+                                        });
+                                        setTempUidd(todo.uidd);
+                                      }}
+                                    >
+                                      Edit
+                                    </Button>
+                                  )}
+                                  {!isEditing && (
+                                    <Button
+                                      size="sm"
+                                      color="danger"
+                                      onClick={() => {
+                                        deleteTodo(todo.uidd);
+                                      }}
+                                    >
+                                      Delete
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })
                   ) : (
                     <p style={{ color: "#666", textAlign: "center" }}>
                       No todos added yet

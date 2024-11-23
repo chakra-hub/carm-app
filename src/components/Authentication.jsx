@@ -77,7 +77,7 @@ const Authentication = () => {
         navigate('/todos')
     }
   },[isEmailVerified])
-console.log(user, isEmailVerified)
+
   return (
     <Box
       sx={{
