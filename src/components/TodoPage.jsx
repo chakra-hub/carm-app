@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
-import { useNavigate } from "react-router-dom";
 import { uid } from "uid";
 import { onValue, ref, remove, set, update } from "firebase/database";
+import moment from "moment";
 import { HashLoader } from "react-spinners";
 import Box from "@mui/joy/Box";
 import { Chip } from "@mui/joy";
@@ -18,12 +18,16 @@ import LowPriorityIcon from "@mui/icons-material/LowPriority";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import { Tooltip } from "@mui/material";
 import FormControl from "@mui/joy/FormControl";
-import FormLabel from "@mui/joy/FormLabel";
 import FormHelperText from "@mui/joy/FormHelperText";
-import Stack from "@mui/joy/Stack";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import { useAuth } from "../authContex";
 import Checkbox from "@mui/joy/Checkbox";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import { DemoItem } from "@mui/x-date-pickers/internals/demo";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { extractDateFromString } from "../utils/utils";
 
 const TodoPage = () => {
   const [todos, setTodos] = useState([]);
@@ -32,6 +36,8 @@ const TodoPage = () => {
     title: "",
     priority: "Low",
     done: false,
+    dateCreated: "",
+    deadline: "",
   });
   const [isEditing, setIsEditing] = useState(false);
   const [tempUidd, setTempUidd] = useState("");
@@ -44,13 +50,15 @@ const TodoPage = () => {
   const addTodos = () => {
     const uidd = uid(); //DFASDFSDFA
     set(ref(db, `/${auth.currentUser.uid}/${uidd}`), {
-      todo: newTodo,
+      todo: { ...newTodo, dateCreated: Date.now() },
       uidd: uidd,
     });
     setNewTodo({
       title: "",
       priority: "Low",
       done: false,
+      dateCreated: "",
+      deadline: "",
     });
   };
 
@@ -137,10 +145,10 @@ const TodoPage = () => {
   useEffect(() => {
     if (filterArray?.length > 0) {
       handleFilterTodos();
-    }else{
+    } else {
       setCopyTodosArray(todos);
     }
-  }, [filterArray,todos]);
+  }, [filterArray, todos]);
 
   return (
     <Box
@@ -196,7 +204,14 @@ const TodoPage = () => {
 
                         // Update state only if input length is <= 30
                         if (input.length <= 40) {
-                          setNewTodo({ ...newTodo, title: input });
+                          const date = extractDateFromString(input);
+                          setNewTodo({
+                            ...newTodo,
+                            title: input,
+                            deadline: isNaN(Date.parse(date))
+                              ? ""
+                              : Date.parse(date),
+                          });
                         }
                       }}
                       defaultValue="max 30 characters !"
@@ -215,7 +230,9 @@ const TodoPage = () => {
                             <Button
                               color="success"
                               type="submit"
-                              onClick={addTodos}
+                              onClick={() => {
+                                addTodos();
+                              }}
                               disabled={newTodo.title === "" || inputFieldError}
                             >
                               Add Todo
@@ -243,21 +260,51 @@ const TodoPage = () => {
                     )}
                   </FormControl>
                 </div>
-                <div>
-                  <Typography level="title-sm">Priority</Typography>
-                  <Select
-                    defaultValue={newTodo?.priority}
-                    size="sm"
-                    sx={{ width: 100 }}
-                    value={newTodo.priority}
-                    onChange={(event, newValue) => {
-                      setNewTodo({ ...newTodo, priority: newValue });
-                    }}
-                  >
-                    <Option value="Blocker">Blocker</Option>
-                    <Option value="High">High</Option>
-                    <Option value="Low">Low</Option>
-                  </Select>
+                <div style={{ display: "flex", alignItems: "end" }}>
+                  <div style={{ marginRight: "5px" }}>
+                    <label htmlFor="select-button" id="select-label">
+                      <Typography level="title-sm">Priority</Typography>
+                    </label>
+                    <Select
+                      defaultValue={newTodo?.priority}
+                      // size="xl"
+                      sx={{ width: 100 }}
+                      value={newTodo.priority}
+                      onChange={(event, newValue) => {
+                        setNewTodo({ ...newTodo, priority: newValue });
+                      }}
+                    >
+                      <Option value="Blocker">Blocker</Option>
+                      <Option value="High">High</Option>
+                      <Option value="Low">Low</Option>
+                    </Select>
+                  </div>
+                  <div>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DemoItem label="">
+                        <DatePicker
+                          value={dayjs(
+                            newTodo.deadline === ""
+                              ? moment(Date.now()).format("YYYY/MM/DD")
+                              : moment(newTodo?.deadline).format("YYYY/MM/DD")
+                          )}
+                          defaultValue={dayjs("2022-04-17")}
+                          slotProps={{ textField: { size: "small" } }}
+                          sx={{
+                            width: "150px",
+                            backgroundColor: "#fbfcfe",
+                          }}
+                          // value={}
+                          onChange={(newValue) => {
+                            setNewTodo({
+                              ...newTodo,
+                              deadline: Date.parse(newValue.$d),
+                            });
+                          }}
+                        />
+                      </DemoItem>
+                    </LocalizationProvider>
+                  </div>
                 </div>
               </form>
             </section>
@@ -293,14 +340,18 @@ const TodoPage = () => {
                     justifyContent: "space-between",
                   }}
                 >
-                  <div style={{visibility:copyTodosArray.length == 1 && 'hidden'}}>
+                  <div
+                    style={{
+                      visibility: copyTodosArray.length == 1 && "hidden",
+                    }}
+                  >
                     <Select
                       defaultValue="Priority - High to Low"
                       size="sm"
                       sx={{ width: 100 }}
                       value={sortValue}
                       onChange={(event, newValue) => {
-                          setSortValue(newValue);
+                        setSortValue(newValue);
                       }}
                     >
                       <Option value="Priority - High to Low">
@@ -309,6 +360,14 @@ const TodoPage = () => {
                       <Option value="Priority - Low to High">
                         Priority - Low to High
                       </Option>
+                      <Option value="Date Created High to Low">
+                        Date Created High to Low
+                      </Option>
+                      <Option value="Date Created Low to High">
+                        Date Created Low to High
+                      </Option>
+                      <Option value="Deadline Near">Deadline Near</Option>
+                      <Option value="Deadline Far">Deadline Far </Option>
                     </Select>
                   </div>
 
@@ -320,7 +379,11 @@ const TodoPage = () => {
                       renderValue={(selected) => (
                         <Box sx={{ display: "flex", gap: "0.25rem" }}>
                           {selected.map((selectedOption) => (
-                            <Chip variant="soft" color="primary">
+                            <Chip
+                              variant="soft"
+                              color="primary"
+                              key={selectedOption.label}
+                            >
                               {selectedOption.label}
                             </Chip>
                           ))}
@@ -335,9 +398,18 @@ const TodoPage = () => {
                       }}
                     >
                       <Option value="Done">Done</Option>
-                     {filterArray?.indexOf('Low') === -1 && filterArray?.indexOf('High') === -1 && <Option value="Blocker">Blocker</Option>}
-                     {filterArray?.indexOf('Blocker') === -1 && filterArray?.indexOf('Low') === -1 && <Option value="High">High</Option>}  
-                     {filterArray?.indexOf('Blocker') === -1 && filterArray?.indexOf('High') === -1 && <Option value="Low">Low</Option>}
+                      {filterArray?.indexOf("Low") === -1 &&
+                        filterArray?.indexOf("High") === -1 && (
+                          <Option value="Blocker">Blocker</Option>
+                        )}
+                      {filterArray?.indexOf("Blocker") === -1 &&
+                        filterArray?.indexOf("Low") === -1 && (
+                          <Option value="High">High</Option>
+                        )}
+                      {filterArray?.indexOf("Blocker") === -1 &&
+                        filterArray?.indexOf("High") === -1 && (
+                          <Option value="Low">Low</Option>
+                        )}
                     </Select>
                   </div>
                 </div>
@@ -357,9 +429,19 @@ const TodoPage = () => {
                       ?.sort((a, b) =>
                         sortValue === "Priority - High to Low"
                           ? a?.todo?.priority?.localeCompare(b.todo?.priority)
-                          : b?.todo?.priority?.localeCompare(a?.todo?.priority)
+                          : sortValue === "Priority - Low to High"
+                            ? b?.todo?.priority?.localeCompare(
+                                a?.todo?.priority
+                              )
+                            : sortValue === "Date Created High to Low"
+                              ? b?.todo?.dateCreated - a?.todo?.dateCreated
+                              : sortValue === "Date Created Low to High"
+                                ? a?.todo?.dateCreated - b?.todo?.dateCreated
+                                : sortValue === "Deadline Near"
+                                  ? a?.todo?.deadline - b?.todo?.deadline
+                                  : b?.todo?.deadline - a?.todo?.deadline
                       )
-                      .map((todo, index) => {
+                      .map((todo) => {
                         return (
                           <Card
                             variant="outlined"
@@ -379,19 +461,76 @@ const TodoPage = () => {
                                 </Typography>
 
                                 {todo?.todo?.priority === "Blocker" && (
-                                  <Tooltip title="Blocker">
+                                  <Tooltip
+                                    title={
+                                      <div>
+                                        <div>Blocker</div>
+                                        <div>
+                                          Created on -{" "}
+                                          {moment(
+                                            todo?.todo?.dateCreated
+                                          ).format("DD/MM/YYYY")}
+                                        </div>
+                                        <div>
+                                          Deadline -{" "}
+                                          {todo?.todo?.deadline
+                                            ? `${moment(todo?.todo?.deadline).format("DD/MM/YYYY")} -  
+                                             ${moment(todo?.todo?.deadline).endOf("day").fromNow()}`
+                                            : "N/A"}
+                                        </div>
+                                      </div>
+                                    }
+                                  >
                                     <BlockIcon />{" "}
                                   </Tooltip>
                                 )}
 
                                 {todo?.todo?.priority === "Low" && (
-                                  <Tooltip title="Priority Low">
+                                  <Tooltip
+                                    title={
+                                      <div>
+                                        <div>Low Priority</div>
+                                        <div>
+                                          Created on -{" "}
+                                          {moment(
+                                            todo?.todo?.dateCreated
+                                          ).format("DD/MM/YYYY")}
+                                        </div>
+                                        <div>
+                                          Deadline -{" "}
+                                          {todo?.todo?.deadline
+                                            ? `${moment(todo?.todo?.deadline).format("DD/MM/YYYY")} -  
+                                           ${moment(todo?.todo?.deadline).endOf("day").fromNow()}`
+                                            : "N/A"}
+                                        </div>
+                                      </div>
+                                    }
+                                  >
                                     <LowPriorityIcon />
                                   </Tooltip>
                                 )}
 
                                 {todo?.todo?.priority === "High" && (
-                                  <Tooltip title="Priority High">
+                                  <Tooltip
+                                    title={
+                                      <div>
+                                        <div>High Priority</div>
+                                        <div>
+                                          Created on -{" "}
+                                          {moment(
+                                            todo?.todo?.dateCreated
+                                          ).format("DD/MM/YYYY")}
+                                        </div>
+                                        <div>
+                                          Deadline -{" "}
+                                          {todo?.todo?.deadline
+                                            ? `${moment(todo?.todo?.deadline).format("DD/MM/YYYY")} -  
+                                           ${moment(todo?.todo?.deadline).endOf("day").fromNow()}`
+                                            : "N/A"}
+                                        </div>
+                                      </div>
+                                    }
+                                  >
                                     <PriorityHighIcon />
                                   </Tooltip>
                                 )}
@@ -427,6 +566,8 @@ const TodoPage = () => {
                                           title: todo.todo.title,
                                           priority: todo.todo.priority,
                                           done: todo?.todo?.done,
+                                          dateCreated: todo?.todo?.dateCreated,
+                                          deadline: todo?.todo?.deadline,
                                         });
                                         setTempUidd(todo.uidd);
                                       }}
