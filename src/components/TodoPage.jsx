@@ -284,6 +284,7 @@ const TodoPage = () => {
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <DemoItem label="">
                         <DatePicker
+                          label="Deadline"
                           value={dayjs(
                             newTodo.deadline === ""
                               ? moment(Date.now()).format("YYYY/MM/DD")
