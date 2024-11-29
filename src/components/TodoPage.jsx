@@ -46,6 +46,7 @@ const TodoPage = () => {
   const [inputFieldError, setInputFieldError] = useState(false);
   const { user, isEmailVerified } = useAuth();
   const [filterArray, setFilterArray] = useState([]);
+  const [refreshDropDown, setRefreshDropDown] = useState(false);
 
   const addTodos = () => {
     const uidd = uid(); //DFASDFSDFA
@@ -371,46 +372,63 @@ const TodoPage = () => {
                     </Select>
                   </div>
 
-                  <div>
-                    <Select
-                      size="sm"
-                      multiple
-                      onChange={(event, newValue) => setFilterArray(newValue)}
-                      renderValue={(selected) => (
-                        <Box sx={{ display: "flex", gap: "0.25rem" }}>
-                          {selected.map((selectedOption) => (
-                            <Chip
-                              variant="soft"
-                              color="primary"
-                              key={selectedOption.label}
-                            >
-                              {selectedOption.label}
-                            </Chip>
-                          ))}
-                        </Box>
-                      )}
-                      slotProps={{
-                        listbox: {
-                          sx: {
-                            width: "100%",
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    {filterArray?.length > 0 && (
+                      <Button
+                        variant="plain"
+                        sx={{ marginRight: "2px" }}
+                        onClick={() => {
+                          setRefreshDropDown((prev) => !prev);
+                          setFilterArray([]);
+                        }}
+                      >
+                        Reset
+                      </Button>
+                    )}
+                    {filterArray?.length >= 0 && (
+                      <Select
+                        key={refreshDropDown}
+                        size="sm"
+                        multiple
+                        onChange={(event, newValue) => setFilterArray(newValue)}
+                        renderValue={(selected) => (
+                          <Box sx={{ display: "flex", gap: "0.25rem" }}>
+                            {selected.map((selectedOption) => (
+                              <Chip
+                                variant="soft"
+                                color="primary"
+                                key={selectedOption.label}
+                              >
+                                {selectedOption.label}
+                              </Chip>
+                            ))}
+                          </Box>
+                        )}
+                        slotProps={{
+                          listbox: {
+                            sx: {
+                              width: "100%",
+                            },
                           },
-                        },
-                      }}
-                    >
-                      <Option value="Done">Done</Option>
-                      {filterArray?.indexOf("Low") === -1 &&
-                        filterArray?.indexOf("High") === -1 && (
-                          <Option value="Blocker">Blocker</Option>
-                        )}
-                      {filterArray?.indexOf("Blocker") === -1 &&
-                        filterArray?.indexOf("Low") === -1 && (
-                          <Option value="High">High</Option>
-                        )}
-                      {filterArray?.indexOf("Blocker") === -1 &&
-                        filterArray?.indexOf("High") === -1 && (
-                          <Option value="Low">Low</Option>
-                        )}
-                    </Select>
+                        }}
+                      >
+                        <Option value="Done" key={filterArray.length || 0}>
+                          Done
+                        </Option>
+                        {filterArray?.indexOf("Low") === -1 &&
+                          filterArray?.indexOf("High") === -1 && (
+                            <Option value="Blocker">Blocker</Option>
+                          )}
+                        {filterArray?.indexOf("Blocker") === -1 &&
+                          filterArray?.indexOf("Low") === -1 && (
+                            <Option value="High">High</Option>
+                          )}
+                        {filterArray?.indexOf("Blocker") === -1 &&
+                          filterArray?.indexOf("High") === -1 && (
+                            <Option value="Low">Low</Option>
+                          )}
+                      </Select>
+                    )}
                   </div>
                 </div>
 
