@@ -54,7 +54,7 @@ const TodoPage = () => {
   const [allWorkspaceNameArray, setAllWorkspaceNameArray] = useState([]);
 
   const addTodos = () => {
-    const uidd = uid(); //DFASDFSDFA
+    const uidd = uid();
     set(
       ref(
         db,
