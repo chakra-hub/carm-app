@@ -8,7 +8,7 @@ import Apps from "@mui/icons-material/Apps";
 import Dropdown from "@mui/joy/Dropdown";
 import DeleteForever from "@mui/icons-material/DeleteForever";
 export default function Workspaces({
-  allWorkspaces = [],
+  allWorkspaces = [] as string[],
   onWorkSpaceChange,
   selectedIndex,
   onWorkspaceAddOrDelete,

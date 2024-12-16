@@ -1,10 +1,10 @@
-// src/components/AuthForm.js
+import React from "react";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/joy/Box";
@@ -22,7 +22,7 @@ const Authentication = () => {
     confirmPassword: "",
   });
   const [showEmailSent, setShowEmailSent] = useState(false);
-  const {user, isEmailVerified, setUser, setIsEmailVerified} = useAuth();
+  const { user, isEmailVerified, setUser, setIsEmailVerified } = useAuth();
   const navigate = useNavigate();
 
   const toggleForm = () => {
@@ -32,33 +32,33 @@ const Authentication = () => {
 
   const handleAuth = async (action) => {
     if (action === "Signin") {
-        try {
-            const userCredential = await signInWithEmailAndPassword(
-              auth,
-              formData.email,
-              formData.password
-            );
-            if (userCredential.user.emailVerified) {
-              setUser(userCredential.user);
-              setIsEmailVerified(userCredential.user.emailVerified);
-              navigate("/todos");
-            } else {
-                setShowEmailSent(true);
-            }
-          } catch (error) {
-            console.error(error.message);
-            alert(error.message);
-          }
+      try {
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
+        if (userCredential.user.emailVerified) {
+          setUser(userCredential.user);
+          setIsEmailVerified(userCredential.user.emailVerified);
+          navigate("/todos");
+        } else {
+          setShowEmailSent(true);
+        }
+      } catch (error) {
+        console.error(error.message);
+        alert(error.message);
+      }
     } else {
       if (formData.password === formData.confirmPassword) {
         try {
-          const user = await createUserWithEmailAndPassword(
+          await createUserWithEmailAndPassword(
             auth,
             formData.email,
             formData.password
           );
           setIsSignup(false);
-          sendEmailVerification(auth.currentUser);
+          sendEmailVerification(auth.currentUser!);
           setShowEmailSent(true);
         } catch (error) {
           alert(error.code);
@@ -72,11 +72,11 @@ const Authentication = () => {
     }
   };
 
-  useEffect(()=>{
-    if(user && isEmailVerified){
-        navigate('/todos')
+  useEffect(() => {
+    if (user && isEmailVerified) {
+      navigate("/todos");
     }
-  },[isEmailVerified])
+  }, [isEmailVerified]);
 
   return (
     <Box
@@ -132,7 +132,7 @@ const Authentication = () => {
           </Box>
         )}
         <Button
-        type="submit"
+          type="submit"
           onClick={(e) => {
             e.preventDefault();
             handleAuth(isSignup ? "Signup" : "Signin");

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
 import { uid } from "uid";
 import { onValue, ref, remove, set, update } from "firebase/database";
@@ -58,7 +58,7 @@ const TodoPage = () => {
     set(
       ref(
         db,
-        `/${auth.currentUser.uid}/${allWorkspaceNameArray[currentWorkSpaceId]}/${uidd}`
+        `/${auth?.currentUser?.uid}/${allWorkspaceNameArray[currentWorkSpaceId]}/${uidd}`
       ),
       {
         todo: { ...newTodo, dateCreated: Date.now() },
@@ -79,7 +79,7 @@ const TodoPage = () => {
       update(
         ref(
           db,
-          `/${auth.currentUser.uid}/${allWorkspaceNameArray[currentWorkSpaceId]}/${todo?.uidd}`
+          `/${auth?.currentUser?.uid}/${allWorkspaceNameArray[currentWorkSpaceId]}/${todo?.uidd}`
         ),
         {
           todo: { ...todo.todo, done: !todo?.todo?.done },
@@ -90,7 +90,7 @@ const TodoPage = () => {
       update(
         ref(
           db,
-          `/${auth.currentUser.uid}/${allWorkspaceNameArray[currentWorkSpaceId]}/${tempUidd}`
+          `/${auth?.currentUser?.uid}/${allWorkspaceNameArray[currentWorkSpaceId]}/${tempUidd}`
         ),
         {
           todo: newTodo,

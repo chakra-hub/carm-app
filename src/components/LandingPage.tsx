@@ -16,7 +16,6 @@ const LandingPage = () => {
         backgroundColor: "#f7f8fc",
       }}
     >
-      {/* Header Section */}
       <Box
         component="header"
         sx={{
@@ -55,7 +54,7 @@ const LandingPage = () => {
         }}
       >
         {/* AuthForm is used here for user authentication */}
-        <Authentication/>
+        <Authentication />
       </Box>
 
       {/* Footer Section */}
@@ -68,7 +67,10 @@ const LandingPage = () => {
           color: "#888",
         }}
       >
-      <Typography level="body-xs"> © {new Date().getFullYear()} Chakradhar. All rights reserved.</Typography> 
+        <Typography level="body-xs">
+          {" "}
+          © {new Date().getFullYear()} Chakradhar. All rights reserved.
+        </Typography>
       </Box>
     </Box>
   );
